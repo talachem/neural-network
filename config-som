@@ -1,0 +1,9 @@
+dataPath = datafiles
+gridSize = [15, 15]
+trainAmount = 50000
+validAmount = 25000
+batchSize = 128
+topology = rectangular
+scheduler = exponential
+features = clsParameters, coordinates
+epochs = 100

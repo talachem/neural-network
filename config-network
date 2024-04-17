@@ -1,0 +1,13 @@
+trainAmount = 5000
+validAmount = 2500
+dataPath = datafiles
+features = cluster
+normalize = True
+
+numLayers = 3
+numNeurons = 81, 81, 81
+convolutions1 = 1
+channels1 = 1,3
+channels12 = 1,5,5
+kernelSize1 = (3,3)
+kernelSize12 = (2,2)

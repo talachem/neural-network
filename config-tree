@@ -1,0 +1,11 @@
+trainAmount = 6400
+validAmount = 3200
+depth = 7
+impurity = entropy
+leaf = house
+split = c45
+asdf = 5
+dataPath = dataFiles
+normalize = True
+features = clsParameters, coordinates
+percentile = 90

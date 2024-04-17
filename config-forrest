@@ -1,0 +1,14 @@
+trainAmount = 12800
+validAmount = 6400
+depth = [8, 8, 8, 8]
+percentile = 90
+impurity = gini, entropy, gini, entropy, gini, entropy, gini, entropy, gini, entropy, gini, entropy
+leaf = house
+split = cart, cart, c45, c45, id3, id3, cart, cart, c45, c45, id3, id3
+asdf = 5
+numTrees = 12
+dataPath = dataFiles
+features = clsParameters, coordinates
+booster = adaptive
+retrainFirst = True
+normalize = False
