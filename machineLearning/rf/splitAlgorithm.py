@@ -100,8 +100,15 @@ class CART(SplitAlgorithm):
         leftTargets = [targets[splitMask] for splitMask in allSplitsMask.T]
         rightTargets = [targets[np.logical_not(splitMask)] for splitMask in allSplitsMask.T]
 
-        leftImpurity = np.array([(leftCounts[i] / len(targets)) * self._impurity(leftTargets[i]) for i in range(len(splits))])
-        rightImpurity = np.array([(rightCounts[i] / len(targets)) * self._impurity(rightTargets[i]) for i in range(len(splits))])
+        if weights is not None:
+            leftWeights = [weights[splitMask] for splitMask in allSplitsMask.T]
+            rightWeights = [weights[np.logical_not(splitMask)] for splitMask in allSplitsMask.T]
+        else:
+            leftWeights = [None] * len(allSplitsMask)
+            rightWeights = [None] * len(allSplitsMask)
+
+        leftImpurity = np.array([(leftCounts[i] / len(targets)) * self._impurity(leftTargets[i], weights=leftWeights[i], classWeights=classWeights) for i in range(len(splits))])
+        rightImpurity = np.array([(rightCounts[i] / len(targets)) * self._impurity(rightTargets[i], weights=rightWeights[i], classWeights=classWeights) for i in range(len(splits))])
 
         # collecting the impurity together
         infoGain = leftImpurity + rightImpurity
@@ -142,8 +149,15 @@ class ID3(SplitAlgorithm):
         leftTargets = [targets[splitMask] for splitMask in allSplitsMask.T]
         rightTargets = [targets[np.logical_not(splitMask)] for splitMask in allSplitsMask.T]
 
-        leftImpurity = np.array([(leftCounts[i] / len(targets)) * self._impurity(leftTargets[i]) for i in range(len(splits))])
-        rightImpurity = np.array([(rightCounts[i] / len(targets)) * self._impurity(rightTargets[i]) for i in range(len(splits))])
+        if weights is not None:
+            leftWeights = [weights[splitMask] for splitMask in allSplitsMask.T]
+            rightWeights = [weights[np.logical_not(splitMask)] for splitMask in allSplitsMask.T]
+        else:
+            leftWeights = [None] * len(allSplitsMask)
+            rightWeights = [None] * len(allSplitsMask)
+
+        leftImpurity = np.array([(leftCounts[i] / len(targets)) * self._impurity(leftTargets[i], weights=leftWeights[i], classWeights=classWeights) for i in range(len(splits))])
+        rightImpurity = np.array([(rightCounts[i] / len(targets)) * self._impurity(rightTargets[i], weights=rightWeights[i], classWeights=classWeights) for i in range(len(splits))])
 
         # calculating the left/right side contribution to impurity
         leftImpurityContrib = leftCounts / len(targets) * leftImpurity
@@ -183,8 +197,15 @@ class C45(SplitAlgorithm):
         leftTargets = [targets[splitMask] for splitMask in allSplitsMask.T]
         rightTargets = [targets[np.logical_not(splitMask)] for splitMask in allSplitsMask.T]
 
-        leftImpurity = np.array([(leftCounts[i] / len(targets)) * self._impurity(leftTargets[i]) for i in range(len(splits))])
-        rightImpurity = np.array([(rightCounts[i] / len(targets)) * self._impurity(rightTargets[i]) for i in range(len(splits))])
+        if weights is not None:
+            leftWeights = [weights[splitMask] for splitMask in allSplitsMask.T]
+            rightWeights = [weights[np.logical_not(splitMask)] for splitMask in allSplitsMask.T]
+        else:
+            leftWeights = [None] * len(allSplitsMask)
+            rightWeights = [None] * len(allSplitsMask)
+
+        leftImpurity = np.array([(leftCounts[i] / len(targets)) * self._impurity(leftTargets[i], weights=leftWeights[i], classWeights=classWeights) for i in range(len(splits))])
+        rightImpurity = np.array([(rightCounts[i] / len(targets)) * self._impurity(rightTargets[i], weights=rightWeights[i], classWeights=classWeights) for i in range(len(splits))])
 
         # calculating the left/right side contribution to impurity
         leftImpurityContrib = leftCounts / len(targets) * leftImpurity

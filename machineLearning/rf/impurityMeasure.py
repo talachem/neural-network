@@ -10,14 +10,14 @@ class ImpurityMeasure(ABC):
     def __init__(self) -> None:
         self.name = self.__class__.__name__
 
-    def __call__(self, targets: NDArray, *, weights: NDArray| None = None, classWeights: NDArray| None = None) -> float:
+    def __call__(self, targets: NDArray, *, weights: NDArray | None = None, classWeights: NDArray | None = None) -> float:
         """
         Calls the _loss method to compute the impurity measure value of the input target array.
         """
         return self._loss(targets, weights=weights, classWeights=classWeights)
 
     @abstractmethod
-    def _loss(self, targets: NDArray, *, weights: NDArray| None = None, classWeights: NDArray| None = None) -> float:
+    def _loss(self, targets: NDArray, *, weights: NDArray | None = None, classWeights: NDArray | None = None) -> float:
         """
         Computes the impurity measure value of the input target array.
         """
@@ -28,34 +28,59 @@ class Gini(ImpurityMeasure):
     """
     A class for computing the Gini impurity measure.
     """
-    def __init__(self) -> None:
+    def __init__(self, epsilon: float = 10e-9) -> None:
         super().__init__()
+        self.epsilon = epsilon # stability constant
 
-    def _loss(self, targets: NDArray, *, weights: NDArray| None = None, classWeights: NDArray| None = None) -> float:
+    def _loss(self, targets: NDArray, *, weights: NDArray | None = None, classWeights: NDArray| None = None) -> float:
         """
         Computes the Gini impurity measure value of the input target array.
         """
-        uniTargets, counts = np.unique(targets, return_counts=True) # Get unique target classes and their counts
-        classWeights = np.ones(uniTargets.shape[0]) if classWeights is None else classWeights # If no classWeights provided, consider all classes equally important
-        p = classWeights * counts / len(targets) # Compute the probability of each class in the target array
-        return (p * (1 - p)).sum() # Compute the Gini impurity measure value
+        uniTargets, inv = np.unique(targets, return_inverse=True)  # Find unique classes and indices mapping
+        if weights is None:
+            weights = np.ones(len(targets)) / len(targets)  # Uniform weights if none provided
+
+        weightedCounts = np.zeros(len(uniTargets))
+        for idx, classLabel in enumerate(uniTargets):
+            weightedCounts[idx] = np.sum(weights[inv == idx])  # Sum weights for each class
+
+        if classWeights is None:
+            classWeights = np.ones(len(uniTargets))  # Uniform class weights if none provided
+
+        totalWeight = np.sum(weightedCounts)
+        p = (weightedCounts * classWeights) / (totalWeight + self.epsilon)  # Compute the weighted probability of each class
+        return np.sum(p * (1 - p))  # Compute the Gini impurity
 
 
 class Entropy(ImpurityMeasure):
     """
     A class for computing the Entropy impurity measure.
     """
-    def __init__(self) -> None:
+    def __init__(self, epsilon: float = 10e-9) -> None:
         super().__init__()
+        self.epsilon = epsilon # stability constant
 
-    def _loss(self, targets: NDArray, *, weights: NDArray| None = None, classWeights: NDArray| None = None) -> float:
+    def _loss(self, targets: NDArray, *, weights: NDArray | None = None, classWeights: NDArray| None = None) -> float:
         """
         Computes the Entropy impurity measure value of the input target array.
         """
-        uniTargets, counts = np.unique(targets, return_counts=True) # Get unique target classes and their counts
-        classWeights = np.ones(uniTargets.shape[0]) if classWeights is None else classWeights # If no classWeights provided, consider all classes equally important
-        p = classWeights * counts / len(targets) # Compute the probability of each class in the target array
-        return - (p * np.log2(p)).sum() # Compute the Entropy
+        uniTargets, inv = np.unique(targets, return_inverse=True)  # Find unique classes and indices mapping
+        if weights is None:
+            weights = np.ones(len(targets)) / len(targets)  # Uniform weights if none provided
+
+        weightedCounts = np.zeros(len(uniTargets))
+        for idx, classLabel in enumerate(uniTargets):
+            weightedCounts[idx] = np.sum(weights[inv == idx])  # Sum weights for each class
+
+        if classWeights is None:
+            classWeights = np.ones(len(uniTargets))  # Uniform class weights if none provided
+
+        totalWeight = np.sum(weightedCounts)
+        p = (weightedCounts * classWeights) / (totalWeight + self.epsilon)  # Compute the weighted probability of each class
+
+        # Handle zero probabilities to avoid log2(0) which is undefined
+        p = p[p > 0]
+        return -np.sum(p * np.log2(p))  # Compute the Entropy
 
 
 class MAE(ImpurityMeasure):
@@ -65,11 +90,14 @@ class MAE(ImpurityMeasure):
     def __init__(self) -> None:
         super().__init__()
 
-    def _loss(self, targets: NDArray, *, weights: NDArray| None = None, classWeights: NDArray| None = None) -> float:
+    def _loss(self, targets: NDArray, *, weights: NDArray | None = None, classWeights: NDArray| None = None) -> float:
         if len(targets) == 0:
             return 0.0
+        if weights is None:
+            weights = np.ones(len(targets)) / len(targets)
         targetsMean = np.mean(targets)
-        return np.sum(np.abs(targets - targetsMean)) / len(targets)
+        weightedAbsErrors = weights * np.abs(targets - targetsMean)
+        return np.sum(weightedAbsErrors) / np.sum(weights)
 
 
 class MSE(ImpurityMeasure):
@@ -79,11 +107,14 @@ class MSE(ImpurityMeasure):
     def __init__(self) -> None:
         super().__init__()
 
-    def _loss(self, targets: NDArray, *, weights: NDArray| None = None, classWeights: NDArray| None = None) -> float:
+    def _loss(self, targets: NDArray, *, weights: NDArray | None = None, classWeights: NDArray| None = None) -> float:
         if len(targets) == 0:
             return 0.0
+        if weights is None:
+            weights = np.ones(len(targets)) / len(targets)
         targetsMean = np.mean(targets)
-        return np.sum((targets - targetsMean) ** 2) / len(targets)
+        weightedSquaredErrors = weights * (targets - targetsMean) ** 2
+        return np.sum(weightedSquaredErrors) / np.sum(weights)
 
 
 class ODD(ImpurityMeasure):

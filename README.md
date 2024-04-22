@@ -154,6 +154,7 @@ and
   - [ansatz for forrest](https://insidelearningmachines.com/build-a-random-forest-in-python/)
   - [about boosting/bagging](https://blog.mlreview.com/gradient-boosting-from-scratch-1e317ae4587d)
   - [ada boosting](https://www.analyticsvidhya.com/blog/2021/09/adaboost-algorithm-a-complete-guide-for-beginners/)
+  - [boosting](https://towardsdatascience.com/basic-ensemble-learning-random-forest-adaboost-gradient-boosting-step-by-step-explained-95d49d1e2725)
   - [gradient boosting](https://www.machinelearningplus.com/machine-learning/gradient-boosting/)
   - [about pruning](https://12ft.io/proxy?q=https%3A%2F%2Ftowardsdatascience.com%2Fbuild-better-decision-trees-with-pruning-8f467e73b107)
   - [about pruning](https://towardsdatascience.com/build-better-decision-trees-with-pruning-8f467e73b107)

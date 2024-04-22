@@ -31,51 +31,53 @@ class AdaBoosting(Boosting):
     def __init__(self):
         super().__init__()
         self.alpha = []
-        self.weights = None
 
     def train(self, tree: DecisionTree, data: DataSet) -> None:
         """
         Trains the AdaBoost model using a DecisionTree.
         """
-        if self.weights is None:
-            self.weights = np.ones(len(data.targets)) / len(data.targets)
-        tree.train(data.data, data.targets, self.weights)
-        self.updateWeights(tree, data.data, data.targets)
+        if data.weights is None:
+            data.weights = np.ones(len(data)) / len(data)
+        tree.train(data)
+        self.updateWeights(tree, data)
 
     def updateWeights(self, tree: DecisionTree, data: DataSet) -> None:
         """
         Updates the data weights based on the prediction errors.
         """
-        predictions = tree.eval(data.data)
-        errorRate = np.sum(self.weights[data.targets != predictions]) / np.sum(self.weights)
+        predictions = tree.eval(data)
+        errorRate = np.sum(data.weights[data.targets != predictions]) / np.sum(data.weights)
         treeWeights = 0.5 * np.log((1 - errorRate) / errorRate)
         self.alpha.append(treeWeights)
-        self.weights[data.targets == predictions] *= np.exp(-treeWeights)
-        self.weights[data.targets != predictions] *= np.exp(treeWeights)
-        self.weights /= np.sum(self.weights)
+        data.weights[data.targets == predictions] *= np.exp(-treeWeights)
+        data.weights[data.targets != predictions] *= np.exp(treeWeights)
+        data.weights /= np.sum(data.weights)
 
 
 class GradientBoosting(Boosting):
     """
     Gradient Boosting implementation.
     """
-    def __init__(self) -> None:
+    def __init__(self, learningRate=0.1) -> None:
         super().__init__()
         self.residuals = None  # stores the summation of all errors
         self.predictions = {}  # stores past predictions
         self.counter = 0  # counts time steps
+        self.learningRate = learningRate  # Learning rate for boosting
 
     def train(self, tree: DecisionTree, data: DataSet) -> None:
         """
         Trains the GradientBoosting model using a DecisionTree.
         """
         if self.residuals is None:
-            tree.train(data.data, data.targets)
+            tree.train(data)  # Assuming data includes targets
+            self.residuals = data.targets - tree.eval(data)
         else:
-            tree.train(data.data, self.residuals)
+            updated_targets = data.targets - self.learningRate * self.residuals
+            tree.train(data)  # Train on original data but with new targets
+            self.residuals = updated_targets - tree.eval(data)
 
-        self.predictions[self.counter] = data.targets - tree.eval(data.data)
-        self.residuals = np.sum([self.predictions[key] for key in self.predictions.keys()], axis=0)
+        self.predictions[self.counter] = tree.eval(data)
         self.counter += 1
 
 
@@ -84,12 +86,12 @@ class XGBoosting(Boosting):
     Extreme Gradient Boosting (XGBoost) implementation.
     Not working yet
     """
-    def __init__(self, learning_rate=0.1, regularization=1.0):
+    def __init__(self, learningRate=0.1, regularization=1.0):
         super().__init__()
         self.residuals = None  # Summation of all errors
         self.predictions = {}  # Storing past predictions
         self.counter = 0  # Counting time steps
-        self.learning_rate = learning_rate  # Learning rate for boosting
+        self.learningRate = learningRate  # Learning rate for boosting
         self.regularization = regularization  # Regularization term
 
     def train(self, tree: DecisionTree, data: DataSet) -> None:
@@ -110,7 +112,7 @@ class XGBoosting(Boosting):
 
         # Update the residuals based on the new predictions
         new_predictions = tree.eval(data.data)
-        self.residuals += self.learning_rate * new_predictions
+        self.residuals += self.learningRate * new_predictions
 
         # Store the new predictions
         self.predictions[self.counter] = new_predictions

@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 
 from machineLearning.data.dataLoader import DataSet, DataLoader
 from .decisionTree import DecisionTree
@@ -92,7 +92,7 @@ class RandomForest(object):
         """
         return len(self.trees)
 
-    def train(self, data: ArrayLike | DataSet | DataLoader, targets: ArrayLike, classWeights: ArrayLike = None) -> None:
+    def train(self, data: ArrayLike | DataSet | DataLoader, targets: NDArray | None = None, classWeights: NDArray | None = None, weights: NDArray | None = None) -> None:
         """
         protected function to train the ensemble
         """
@@ -102,6 +102,14 @@ class RandomForest(object):
                 raise ValueError("When providing raw data as np.ndarray, 'targets' must also be provided.")
             # Assume data is raw, convert to DataSet
             data = DataSet(data, targets=targets, classWeights=classWeights)
+        else:
+            # Data is an instance of DataSet, check if targets were unnecessarily provided
+            if targets is not None:
+                raise ValueError("When providing data as a DataSet, 'targets' should not be provided separately.")
+            if classWeights is not None:
+                raise ValueError("When providing data as a DataSet, 'classWeights' should not be provided separately.")
+            if weights is not None:
+                raise ValueError("When providing data as a DataSet, 'weights' should not be provided separately.")
 
         # If data is DataSet, convert to DataLoader
         if isinstance(data, DataSet):

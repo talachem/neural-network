@@ -171,7 +171,7 @@ class DecisionTree:
             else:
                 featureIndices = np.arange(0, data.shape[1])
 
-            feature, threshold = self._findSplit(data.data[:,featureIndices], data.targets)
+            feature, threshold = self._findSplit(data.data[:,featureIndices], data.targets, weights=data.weights, classWeights=data.classWeights)
 
             if feature is None or threshold is None:
                 # No valid split found, create a leaf node
@@ -187,6 +187,12 @@ class DecisionTree:
             dataRight = data.data[rightSplit]
             targetsLeft = data.targets[leftSplit]
             targetsRight = data.targets[rightSplit]
+            if data.weights is not None:
+                weightsLeft = data.weights[leftSplit]
+                weightsRight = data.weights[rightSplit]
+            else:
+                weightsLeft = None
+                weightsRight = None
 
             # check if the splits are empty
             if (len(dataLeft) == 0) or (len(dataRight) == 0):
@@ -205,8 +211,8 @@ class DecisionTree:
             node.setChildren(leftNode, rightNode)
 
             # investigate child nodes
-            self._grow(leftNode, level+1, data=DataSet(dataLeft, targets=targetsLeft))
-            self._grow(rightNode, level+1, data=DataSet(dataRight, targets=targetsRight))
+            self._grow(leftNode, level+1, data=DataSet(dataLeft, targets=targetsLeft, classWeights=data.classWeights, weights=weightsLeft))
+            self._grow(rightNode, level+1, data=DataSet(dataRight, targets=targetsRight, classWeights=data.classWeights, weights=weightsRight))
         # is a leaf node
         else:
             node.setValues(data.targets)
@@ -229,7 +235,7 @@ class DecisionTree:
 
         return True
 
-    def train(self, data: NDArray | DataSet, targets: NDArray | None = None, classWeights: NDArray | None = None) -> None:
+    def train(self, data: NDArray | DataSet, targets: NDArray | None = None, classWeights: NDArray | None = None, weights: NDArray | None = None) -> None:
         """
         training the tree
         """
@@ -240,13 +246,15 @@ class DecisionTree:
         if not isinstance(data, DataSet):
             if targets is None:
                 raise ValueError("When providing raw data as NDArray, 'targets' must also be provided.")
-            data = DataSet(data, targets=targets, classWeights=classWeights)  # Convert to DataSet
+            data = DataSet(data, targets=targets, classWeights=classWeights, weights=targets)  # Convert to DataSet
         else:
             # Data is an instance of DataSet, check if targets were unnecessarily provided
             if targets is not None:
                 raise ValueError("When providing data as a DataSet, 'targets' should not be provided separately.")
             if classWeights is not None:
                 raise ValueError("When providing data as a DataSet, 'classWeights' should not be provided separately.")
+            if weights is not None:
+                raise ValueError("When providing data as a DataSet, 'weights' should not be provided separately.")
 
         # set the root node of the tree
         id = str(self.id+1).zfill(len(str(self.treeID+1)))
