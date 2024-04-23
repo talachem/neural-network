@@ -98,22 +98,27 @@ class XGBoosting(Boosting):
         """
         Trains the XGBoost model using a DecisionTree.
         """
-        # Initialize residuals in the first round
-        if self.residuals is None:
-            self.residuals = np.zeros(data.targets.shape[0])
+        # Calculate gradients and hessians for the first round or subsequent rounds
+        if self.counter == 0:
+            gradients = data.targets  # initial gradients are the targets themselves for regression
+            hessians = np.ones_like(data.targets)  # assuming squared error loss
+        else:
+            # Update gradients and hessians based on the latest residuals and predictions
+            gradients = data.targets - self.residuals
+            hessians = np.ones_like(data.targets)  # constant hessian for squared error
 
-        # Calculate gradients and hessians
-        # This is a simplification, usually you'd customize this for your loss function
-        gradients = data.targets - self.residuals  # First-order gradient (derivative)
-        hessians = np.ones(data.targets.shape[0])  # Second-order gradient (constant for squared error)
+        # Train the tree with gradients and hessians (assume your tree can handle this)
+        tree.train(data=data.data, targets=gradients, weights=hessians)
 
-        # Train the tree to fit the residuals, but pass gradients and hessians for leaf optimization
-        tree.train(data.data, data.gradients, hessians=hessians, regularization=self.regularization)
-
-        # Update the residuals based on the new predictions
+        # Evaluate the tree's performance on data
         new_predictions = tree.eval(data.data)
-        self.residuals += self.learningRate * new_predictions
 
-        # Store the new predictions
+        # Update residuals for next round's gradient calculation
+        if self.counter == 0:
+            self.residuals = self.learningRate * new_predictions
+        else:
+            self.residuals += self.learningRate * new_predictions
+
+        # Store the new predictions and increment the counter
         self.predictions[self.counter] = new_predictions
         self.counter += 1
