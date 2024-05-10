@@ -99,19 +99,16 @@ class XGBoosting(Boosting):
         Trains the XGBoost model using a DecisionTree.
         """
         # Calculate gradients and hessians for the first round or subsequent rounds
-        if self.counter == 0:
-            gradients = data.targets  # initial gradients are the targets themselves for regression
-            hessians = np.ones_like(data.targets)  # assuming squared error loss
-        else:
+        if self.counter > 0:
             # Update gradients and hessians based on the latest residuals and predictions
-            gradients = data.targets - self.residuals
-            hessians = np.ones_like(data.targets)  # constant hessian for squared error
+            data.targets = data.targets - self.residuals
+            data.weights = np.ones_like(data.targets)  # constant hessian for squared error
 
         # Train the tree with gradients and hessians (assume your tree can handle this)
-        tree.train(data=data.data, targets=gradients, weights=hessians)
+        tree.train(data=data)
 
         # Evaluate the tree's performance on data
-        new_predictions = tree.eval(data.data)
+        new_predictions = tree.eval(data)
 
         # Update residuals for next round's gradient calculation
         if self.counter == 0:

@@ -1,3 +1,4 @@
+from typing_extensions import Any
 import numpy as np
 import os, re
 from ast import literal_eval
@@ -80,7 +81,7 @@ class Setting(object):
     """
     this class handles a SINGLE parameter of the network, it takes care of options and types, so that nothing gets assigned incorrectly
     """
-    def __init__(self, name: str, default, tooltip: str = '', types: list = [None], options: list = [None], fallback = None):
+    def __init__(self, name: str, default, tooltip: str = '', types: list = [None], options: list = [None], fallback: Any = None) -> None:
         # name and tooltip of this setting
         self.name = name
         self.tooltip = tooltip
@@ -107,7 +108,7 @@ class Setting(object):
         if type(default) == bool and options == [None]:
             self.options = [True, False]
 
-    def checks(self, value) -> (bool, bool):
+    def checks(self, value: Any) -> tuple[bool, bool]:
         """
         this checks if an input makes sense for this parameter, no assigning is happening here
         """
@@ -144,7 +145,7 @@ class Section(object):
     it also stores all incorrectly user parameters
     it handles the printing and writing of its own section parameters
     """
-    def __init__(self, section: str, *, controlParam: str = None, completionMode: int = 0, identify: bool = False):
+    def __init__(self, section: str, *, controlParam: str | None = None, completionMode: int = 0, identify: bool = False) -> None:
         # name and metrics of this settings section
         self.__sectionName__ = section
         self.__maxLen__ = 0
@@ -158,10 +159,10 @@ class Section(object):
         # this is used when parameters are stored in dicts
         self.__identify__ = identify
 
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> Any:
         return getattr(self, key).value
 
-    def __setitem__(self, key: str, value):
+    def __setitem__(self, key: str, value: Any) -> None:
         """
         this sets/assigns parameters to this class, calls functions of the Setting class inorder to determine if a user input can be assigned
         """
@@ -249,7 +250,7 @@ class Section(object):
 
             self.__config__[key] = self._paramLength(self.__config__[key], paramLen)
 
-    def _identify(self) -> dict:
+    def _identify(self) -> None:
         """
         this does the same as '_consistencyCheck', but for settings
         stored in dicts, which happens when the user needs the same,
@@ -343,14 +344,14 @@ class Settings(object):
         # this could be type or wrong choice, not an option
         self.__rejected__ = {}
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Any:
         try:
             masterKey = self.__searchDict__[key]
             return getattr(self, masterKey)[key]
         except KeyError:
             print('{} is not an attribute of settingsClass'.format(key))
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: Any) -> Any:
         masterKey = self.__searchDict__[key]
         getattr(self, masterKey)[key] = value
 
@@ -381,7 +382,7 @@ class Settings(object):
 
         return printString + '\n'
 
-    def getConfig(self, configFile=None):
+    def getConfig(self, configFile: str | None = None) -> None:
         if configFile is None:
             print('no config specified, continuing with defualts')
             return
@@ -415,7 +416,7 @@ class Settings(object):
         #else:
         #    print("config file '{}' not found, continuing with defualts".format(configFile))
 
-    def setConfig(self):
+    def setConfig(self) -> None:
         if len(self.__config__) > 0:
             print('set config....')
             for key in self.__config__:
@@ -435,5 +436,5 @@ class Settings(object):
                 dist[i][j] = wagnerFischer(element,item)
             self.__maybe__[i] = list(self.__searchDict__.keys())[dist[i].argmin()]
 
-    def list(self):
+    def list(self) -> list:
         return [s for s in vars(self).keys() if not (s.startswith('__') or callable(getattr(self, s)))]

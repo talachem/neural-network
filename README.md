@@ -103,13 +103,19 @@ Otherwise I wrote a simple class that can extract PXD data from root files. It's
 
 ## Installing as a system wide library
 
-One has to download the whole repo, navigate there using the terminal and run the following commands:
+One has to download the whole repo, navigate there using the terminal and run the following command:
 
-> python3 setup.py bdist_wheel sdist
+```zsh
+ pip3 install .
+```
 
-and
+or
 
-> pip3 install .
+```zsh
+pip install .
+```
+
+It depends on how python and/or your `PATH` is configured.
 
 ## Sources
 

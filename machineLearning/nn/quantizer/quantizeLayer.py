@@ -1,4 +1,5 @@
 import numpy as np
+from numpy._typing import NDArray
 from numpy.typing import ArrayLike
 from ..layer import Layer
 
@@ -24,7 +25,7 @@ class Quantize(Layer):
         self.zeroPoint = 0
         self.callibrated = False
 
-    def forward(self, input: ArrayLike) -> np.ndarray:
+    def forward(self, input: NDArray) -> NDArray:
         if not self.callibrated:
             if self.scheme == "asymmetric":
                 # Adjust the scale and zeroPoint for asymmetric quantization
@@ -49,7 +50,7 @@ class Quantize(Layer):
 
         return clippedInput
 
-    def backward(self, gradient: np.ndarray) -> None:
+    def backward(self, gradient: NDArray) -> None:
         raise NotImplementedError("This layer can only be used for PTQ and does not support backpropagation.")
 
     def __str__(self) -> str:
@@ -76,11 +77,11 @@ class Accumulator(Layer):
         self.zeroPoint = zeroPoint
         self.scheme = scheme
 
-    def forward(self, input: ArrayLike) -> np.ndarray:
+    def forward(self, input: NDArray) -> NDArray:
         input = np.round(input / self.scale) - self.zeroPoint
         return input.astype(np.int32)
 
-    def backward(self, gradient: np.ndarray) -> None:
+    def backward(self, gradient: NDArray) -> None:
         raise NotImplementedError("This layer can only be used for PTQ and does not support backpropagation.")
 
     def __str__(self) -> str:
